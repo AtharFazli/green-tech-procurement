@@ -1,0 +1,107 @@
+<% body = 'product-list' %>
+<%- include('../layouts/main', { body: `
+<div class="max-w-7xl mx-auto">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">Products</h1>
+
+  <div class="flex gap-6">
+    <!-- Filters sidebar -->
+    <div class="w-64 flex-shrink-0">
+      <div class="bg-white rounded-lg shadow-lg p-4 space-y-4">
+        <h3 class="font-semibold text-gray-700">Filters</h3>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Category</label>
+          <select id="filter-category" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="filter-green" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+            <span class="text-sm text-gray-700">Green Certified Only</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Search</label>
+          <input type="text" id="filter-search" placeholder="Search products..."
+                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+        </div>
+
+        <button id="apply-filters" class="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 text-sm">Apply Filters</button>
+      </div>
+    </div>
+
+    <!-- Product grid -->
+    <div class="flex-1">
+      <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Products loaded via JS -->
+      </div>
+      <div id="pagination" class="mt-6 flex justify-center space-x-2"></div>
+    </div>
+  </div>
+</div>
+<script>
+async function loadProducts(params = {}) {
+  const query = new URLSearchParams(params);
+  const res = await fetch('/api/v1/products?' + query.toString());
+  const data = await res.json();
+  const grid = document.getElementById('product-grid');
+
+  if (!data.data || !data.data.data || data.data.data.length === 0) {
+    grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12">No products found.</div>';
+    return;
+  }
+
+  grid.innerHTML = data.data.data.map(p => \`
+    <div class="bg-white rounded-lg shadow-lg p-4">
+      <div class="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-400 text-sm">Image</div>
+      <h3 class="font-semibold text-gray-800">\${p.name}</h3>
+      <p class="text-sm text-gray-500">\${p.vendor_name || 'Unknown Vendor'}</p>
+      <div class="mt-2 flex items-center justify-between">
+        <span class="text-lg font-bold text-emerald-600">\${parseFloat(p.base_price).toFixed(2)} \${p.currency || 'USD'}</span>
+        \${p.is_green_certified ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Green</span>' : ''}
+      </div>
+    </div>
+  \`).join('');
+
+  // Pagination
+  const pag = data.data.pagination;
+  const pgEl = document.getElementById('pagination');
+  if (pag.totalPages <= 1) { pgEl.innerHTML = ''; return; }
+  let pgHtml = '';
+  for (let i = 1; i <= pag.totalPages; i++) {
+    pgHtml += \`<button onclick="loadProducts({...Object.fromEntries(new URLSearchParams(location.search)), page: \${i}})" class="px-3 py-1 rounded \${i === pag.page ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700'}">\${i}</button>\`;
+  }
+  pgEl.innerHTML = pgHtml;
+}
+
+// Load categories for filter
+fetch('/api/v1/categories').then(r => r.json()).then(data => {
+  const sel = document.getElementById('filter-category');
+  if (data.data) {
+    data.data.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+  }
+});
+
+document.getElementById('apply-filters').addEventListener('click', () => {
+  const params = {};
+  const cat = document.getElementById('filter-category').value;
+  if (cat) params.category_id = cat;
+  const green = document.getElementById('filter-green').checked;
+  if (green) params.is_green_certified = 'true';
+  const search = document.getElementById('filter-search').value;
+  if (search) params.search = search;
+  loadProducts(params);
+});
+
+// Initial load
+loadProducts();
+</script>
+` }) %>

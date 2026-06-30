@@ -75,6 +75,38 @@ server.get('/dashboard/vendor', (req, res) => {
   res.render('dashboard/vendor', { user: req.pageUser, title: 'Vendor Dashboard' });
 });
 
+const auth = require('./middleware/auth');
+
+// Vendor pages
+server.get('/vendors/profile', auth, (req, res) => {
+  const VendorModel = require('./models/VendorModel');
+  const vendor = VendorModel.findByUserId(req.user.id);
+  res.render('vendor/profile', { user: req.user, vendor, page: 'vendor-profile' });
+});
+
+server.get('/vendors/catalog', auth, (req, res) => {
+  const VendorModel = require('./models/VendorModel');
+  const vendor = VendorModel.findByUserId(req.user.id);
+  if (!vendor) return res.redirect('/vendors/profile');
+  res.render('vendor/catalog', { user: req.user, vendor, page: 'vendor-catalog' });
+});
+
+// Product pages
+server.get('/products', (req, res) => {
+  res.render('product/list', { user: req.pageUser || null, page: 'product-list' });
+});
+
+server.get('/products/create', auth, (req, res) => {
+  const ProductCategoryModel = require('./models/ProductCategoryModel');
+  const categories = ProductCategoryModel.findAll();
+  res.render('product/form', { user: req.user, product: null, categories, page: 'product-form' });
+});
+
+server.get('/products/:id/edit', auth, (req, res) => {
+  // verify ownership if vendor
+  res.render('product/form', { user: req.user, product: {}, categories: [], page: 'product-form' });
+});
+
 // API routes
 server.use('/api/v1', require('./routes'));
 

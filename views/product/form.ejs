@@ -1,0 +1,109 @@
+<% body = 'product-form' %>
+<%- include('../layouts/main', { body: `
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6"><%= product ? 'Edit Product' : 'Create Product' %></h1>
+
+  <form action="/api/v1/products/me" method="POST" class="bg-white rounded-lg shadow-lg p-8 space-y-4">
+    <% if (product) { %>
+      <input type="hidden" name="_method" value="PUT">
+    <% } %>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Name *</label>
+        <input type="text" name="name" id="product-name" value="<%= product ? product.name : '' %>" required
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Slug *</label>
+        <input type="text" name="slug" id="product-slug" value="<%= product ? product.slug : '' %>" required
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Category</label>
+      <select name="category_id"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+        <option value="">No Category</option>
+        <% if (typeof categories !== 'undefined' && categories) { %>
+          <% categories.forEach(function(c) { %>
+            <option value="<%= c.id %>" <%= product && product.category_id === c.id ? 'selected' : '' %>><%= c.name %></option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Description</label>
+      <textarea name="description" rows="3"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"><%= product ? product.description || '' : '' %></textarea>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Unit *</label>
+        <input type="text" name="unit" value="<%= product ? product.unit : 'piece' %>" required
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Base Price *</label>
+        <input type="number" step="0.01" min="0" name="base_price" value="<%= product ? product.base_price : '' %>" required
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Currency</label>
+        <select name="currency"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+          <option value="USD" <%= product && product.currency === 'USD' ? 'selected' : '' %>>USD</option>
+          <option value="EUR" <%= product && product.currency === 'EUR' ? 'selected' : '' %>>EUR</option>
+          <option value="GBP" <%= product && product.currency === 'GBP' ? 'selected' : '' %>>GBP</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Carbon Footprint (kg)</label>
+        <input type="number" step="0.01" min="0" name="carbon_footprint_kg" value="<%= product ? product.carbon_footprint_kg || '' : '' %>"
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Stock Qty</label>
+        <input type="number" min="0" name="stock_qty" value="<%= product ? product.stock_qty || 0 : 0 %>"
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" name="is_green_certified" value="true" <%= product && product.is_green_certified ? 'checked' : '' %>
+               class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+        <span class="text-sm text-gray-700">Green Certified</span>
+      </label>
+
+      <label class="flex items-center space-x-2">
+        <span class="text-sm text-gray-700">Status:</span>
+        <select name="status"
+                class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+          <option value="active" <%= product && product.status === 'active' ? 'selected' : '' %>>Active</option>
+          <option value="inactive" <%= product && product.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+          <option value="discontinued" <%= product && product.status === 'discontinued' ? 'selected' : '' %>>Discontinued</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="pt-4">
+      <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <%= product ? 'Update Product' : 'Create Product' %>
+      </button>
+    </div>
+  </form>
+</div>
+<script>
+document.getElementById('product-name')?.addEventListener('input', function() {
+  const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  document.getElementById('product-slug').value = slug;
+});
+</script>
+` }) %>
