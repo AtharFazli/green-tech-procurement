@@ -8,5 +8,6 @@ router.use('/categories', require('./categoryRoutes'));
 router.use('/rfps', require('./rfpRoutes'));
 router.use('/bids', require('./bidRoutes'));
 router.use('/activities', require('./activityRoutes'));
+router.use('/dashboard', require('./dashboardRoutes'));
 
 module.exports = router;

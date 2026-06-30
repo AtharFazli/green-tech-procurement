@@ -75,6 +75,12 @@ server.get('/dashboard/vendor', (req, res) => {
   res.render('dashboard/vendor', { user: req.pageUser, title: 'Vendor Dashboard' });
 });
 
+server.get('/dashboard/admin', (req, res) => {
+  if (!req.pageUser) return res.redirect('/login');
+  if (req.pageUser.role !== 'admin') return res.status(403).send('Forbidden');
+  res.render('dashboard/admin', { user: req.pageUser, title: 'Admin Dashboard' });
+});
+
 const auth = require('./middleware/auth');
 
 // Vendor pages

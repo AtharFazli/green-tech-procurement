@@ -6,6 +6,8 @@
   <title><%= typeof title !== 'undefined' ? title : 'GreenTech Procurement' %></title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="/js/chartjs-config.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <% if (typeof user !== 'undefined' && user) { %>

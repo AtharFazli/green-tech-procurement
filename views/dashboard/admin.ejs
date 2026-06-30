@@ -1,0 +1,94 @@
+<div data-dashboard>
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">🌿 Platform Admin Dashboard</h1>
+    <p class="text-gray-500">Full platform overview and sustainability metrics</p>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="stats-grid">
+    <div class="dashboard-stat">
+      <div class="stat-icon">👥</div>
+      <div class="stat-value" id="stat-totalUsers">—</div>
+      <div class="stat-label">Users</div>
+    </div>
+    <div class="dashboard-stat">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-value" id="stat-totalVendors">—</div>
+      <div class="stat-label">Vendors</div>
+    </div>
+    <div class="dashboard-stat">
+      <div class="stat-icon">🔋</div>
+      <div class="stat-value" id="stat-totalProducts">—</div>
+      <div class="stat-label">Products</div>
+    </div>
+    <div class="dashboard-stat">
+      <div class="stat-icon">📋</div>
+      <div class="stat-value" id="stat-totalRfps">—</div>
+      <div class="stat-label">RFPs</div>
+    </div>
+    <div class="dashboard-stat">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value" id="stat-totalBids">—</div>
+      <div class="stat-label">Bids</div>
+    </div>
+  </div>
+
+  <!-- Key metrics -->
+  <div class="bg-white rounded-xl shadow-sm p-5 mb-6 border border-gray-100">
+    <h2 class="text-lg font-semibold text-gray-700 mb-3">💰 & 🌿 Platform Overview</h2>
+    <div class="flex flex-wrap gap-6">
+      <div>
+        <span class="text-sm text-gray-600">Total Awarded Value: <strong>$<span id="stat-awardedValue">0</span></strong></span>
+      </div>
+      <div>
+        <span class="green-badge">🌿 Avg Sustainability Score: <strong id="stat-avgSustainability">—</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Green stats -->
+  <div class="bg-white rounded-xl shadow-sm p-5 mb-6 border border-gray-100">
+    <h2 class="text-lg font-semibold text-gray-700 mb-3">🟢 Green Stats</h2>
+    <div class="flex flex-wrap gap-6">
+      <div>
+        <span class="green-badge">🌱 Green RFPs: <strong id="green-greenRfps">—</strong> / <strong id="green-totalRfps">—</strong></span>
+      </div>
+      <div>
+        <span class="green-badge">🔋 Green Products: <strong id="green-greenProducts">—</strong> / <strong id="green-totalProducts">—</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart + Top vendors -->
+  <div class="charts-grid">
+    <div class="chart-container">
+      <h3 class="text-sm font-semibold text-gray-600 mb-2">📈 RFP Trend (12 months)</h3>
+      <canvas id="chart-rfp-trend" height="200"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+      <h3 class="text-sm font-semibold text-gray-600 mb-3">🏆 Top Vendors</h3>
+      <table id="top-vendors-table" class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-500 border-b">
+            <th class="pb-2">#</th>
+            <th class="pb-2">Company</th>
+            <th class="pb-2">Wins</th>
+            <th class="pb-2">Bids</th>
+            <th class="pb-2">Sustain.</th>
+            <th class="pb-2">Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Activity feed -->
+  <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6">
+    <h3 class="text-sm font-semibold text-gray-600 mb-3">📌 Recent Activity</h3>
+    <div id="activity-feed"></div>
+  </div>
+</div>
+
+<% if (typeof scripts === 'undefined') { scripts = ''; } %>
+<% scripts += '<script src="/js/dashboard.js"></script>'; %>
