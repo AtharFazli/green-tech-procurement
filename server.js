@@ -113,34 +113,97 @@ server.get('/products/:id/edit', auth, (req, res) => {
   res.render('product/form', { user: req.user, product: {}, categories: [], page: 'product-form' });
 });
 
+// Helper: render page content then wrap in layout
+function renderPage(req, res, view, data, layoutData) {
+  res.render(view, data, (err, html) => {
+    if (err) return res.status(500).send(err.message);
+    res.render('layouts/main', Object.assign({}, data, { body: html }));
+  });
+}
+
 // RFP pages
 server.get('/rfps', (req, res) => {
-  res.render('rfp/list', { user: req.pageUser || null, title: 'RFPs', page: 'rfp-list' });
+  const RFPModel = require('./models/RFPModel');
+  const { getPagination } = require('./helpers/pagination');
+  const { page, limit } = getPagination(req.query);
+  let result;
+  if (req.pageUser && req.pageUser.role === 'buyer') {
+    result = RFPModel.findByBuyer(req.pageUser.id, { page, limit, status: req.query.status });
+  } else {
+    result = RFPModel.findAllOpen({
+      page, limit,
+      is_green_rfp: req.query.is_green_rfp !== undefined ? req.query.is_green_rfp === 'true' : undefined,
+      search: req.query.search
+    });
+  }
+  renderPage(req, res, 'rfp/list', {
+    user: req.pageUser || null, title: 'RFPs', page: 'rfp-list',
+    rfps: result.data, pagination: result.pagination,
+    search: req.query.search || '', status: req.query.status || '', is_green_rfp: req.query.is_green_rfp || ''
+  });
 });
 
 server.get('/rfps/create', auth, (req, res) => {
-  res.render('rfp/create', { user: req.user, title: 'Create RFP', page: 'rfp-create' });
+  renderPage(req, res, 'rfp/create', { user: req.user, title: 'Create RFP', page: 'rfp-create' });
 });
 
 server.get('/rfps/:id', (req, res) => {
-  res.render('rfp/detail', { user: req.pageUser || null, title: 'RFP Detail', page: 'rfp-detail' });
+  const RFPModel = require('./models/RFPModel');
+  const RFPLineItemModel = require('./models/RFPLineItemModel');
+  const BidModel = require('./models/BidModel');
+  const rfp = RFPModel.findById(req.params.id);
+  if (!rfp) return res.status(404).send('RFP not found');
+  const lineItems = RFPLineItemModel.findByRFP(req.params.id);
+  let bids = null;
+  if (req.pageUser && rfp.buyer_id === req.pageUser.id) {
+    bids = BidModel.findByRFP(req.params.id);
+  } else if (rfp.status === 'awarded') {
+    bids = BidModel.findByRFP(req.params.id);
+  }
+  renderPage(req, res, 'rfp/detail', {
+    user: req.pageUser || null, title: 'RFP Detail', page: 'rfp-detail',
+    rfp, lineItems, bids
+  });
 });
 
 // Bid pages
 server.get('/bids', auth, (req, res) => {
-  res.render('bid/list', { user: req.user, title: 'My Bids', page: 'bid-list' });
+  const BidModel = require('./models/BidModel');
+  const VendorModel = require('./models/VendorModel');
+  const { getPagination } = require('./helpers/pagination');
+  const { page, limit } = getPagination(req.query);
+  const vendor = VendorModel.findByUserId(req.user.id);
+  if (!vendor) return renderPage(req, res, 'bid/list', { user: req.user, title: 'My Bids', page: 'bid-list', bids: [], pagination: null });
+  const result = BidModel.findByVendor(vendor.id, { page, limit });
+  renderPage(req, res, 'bid/list', { user: req.user, title: 'My Bids', page: 'bid-list', bids: result.data, pagination: result.pagination });
 });
 
 server.get('/rfps/:rfpId/bids/create', auth, (req, res) => {
-  res.render('bid/create', { user: req.user, title: 'Submit Bid', page: 'bid-create' });
+  const RFPModel = require('./models/RFPModel');
+  const RFPLineItemModel = require('./models/RFPLineItemModel');
+  const rfp = RFPModel.findById(req.params.rfpId);
+  if (!rfp) return res.status(404).send('RFP not found');
+  const lineItems = RFPLineItemModel.findByRFP(req.params.rfpId);
+  renderPage(req, res, 'bid/create', { user: req.user, title: 'Submit Bid', page: 'bid-create', rfp, lineItems });
 });
 
 server.get('/bids/:id', auth, (req, res) => {
-  res.render('bid/detail', { user: req.user, title: 'Bid Detail', page: 'bid-detail' });
+  const BidModel = require('./models/BidModel');
+  const BidLineItemModel = require('./models/BidLineItemModel');
+  const bid = BidModel.findById(req.params.id);
+  if (!bid) return res.status(404).send('Bid not found');
+  const lineItems = BidLineItemModel.findByBid(req.params.id);
+  renderPage(req, res, 'bid/detail', { user: req.user, title: 'Bid Detail', page: 'bid-detail', bid, lineItems });
 });
 
 // API routes
 server.use('/api/v1', require('./routes'));
+
+// POST /logout — clear cookie & redirect
+server.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.redirect('/login');
+});
 
 // Error handler
 server.use(errorHandler);

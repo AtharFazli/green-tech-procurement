@@ -1,3 +1,5 @@
+<% body = 'dashboard-admin' %>
+<%- include('../layouts/main', { body: `
 <div data-dashboard>
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-800">🌿 Platform Admin Dashboard</h1>
@@ -90,5 +92,5 @@
   </div>
 </div>
 
-<% if (typeof scripts === 'undefined') { scripts = ''; } %>
-<% scripts += '<script src="/js/dashboard.js"></script>'; %>
+<script src="/js/dashboard.js"></script>
+` }) %>

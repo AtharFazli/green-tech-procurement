@@ -149,7 +149,6 @@
   <% } %>
 </div>
 
-<% var scripts = `
 <script>
 async function publishRFP(id) {
   if (!confirm('Publish this RFP? It will be visible to vendors.')) return;
@@ -187,4 +186,4 @@ async function awardRFP(rfpId) {
     else alert('Error: ' + data.message);
   } catch(e) { alert('Network error'); }
 }
-<\/script>`; %>
+</script>

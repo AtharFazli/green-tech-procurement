@@ -94,7 +94,6 @@
   </div>
 </div>
 
-<% var scripts = `
 <script>
 async function updateStatus(bidId, status) {
   if (!confirm('Change bid status to ' + status + '?')) return;
@@ -109,4 +108,4 @@ async function updateStatus(bidId, status) {
     else alert('Error: ' + data.message);
   } catch(e) { alert('Network error'); }
 }
-<\/script>`; %>
+</script>
