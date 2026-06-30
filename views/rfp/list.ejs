@@ -1,0 +1,110 @@
+<div class="max-w-7xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Requests for Proposals</h1>
+    <% if (user && user.role === 'buyer') { %>
+    <a href="/rfps/create" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">Create RFP</a>
+    <% } %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white p-4 rounded-lg shadow mb-6">
+    <form method="GET" class="flex flex-wrap gap-4 items-end">
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Search</label>
+        <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="Search RFPs..." class="border rounded px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Status</label>
+        <select name="status" class="border rounded px-3 py-2 text-sm">
+          <option value="">All</option>
+          <option value="open" <%= typeof status !== 'undefined' && status === 'open' ? 'selected' : '' %>>Open</option>
+          <option value="draft" <%= typeof status !== 'undefined' && status === 'draft' ? 'selected' : '' %>>Draft</option>
+          <option value="under_review" <%= typeof status !== 'undefined' && status === 'under_review' ? 'selected' : '' %>>Under Review</option>
+          <option value="awarded" <%= typeof status !== 'undefined' && status === 'awarded' ? 'selected' : '' %>>Awarded</option>
+          <option value="cancelled" <%= typeof status !== 'undefined' && status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Green RFP</label>
+        <select name="is_green_rfp" class="border rounded px-3 py-2 text-sm">
+          <option value="">All</option>
+          <option value="true" <%= typeof is_green_rfp !== 'undefined' && is_green_rfp === 'true' ? 'selected' : '' %>>Yes</option>
+          <option value="false" <%= typeof is_green_rfp !== 'undefined' && is_green_rfp === 'false' ? 'selected' : '' %>>No</option>
+        </select>
+      </div>
+      <button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded text-sm hover:bg-gray-700">Filter</button>
+    </form>
+  </div>
+
+  <!-- RFPs Table -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Title</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Buyer</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Deadline</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Bids</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Green</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% if (typeof rfps !== 'undefined' && rfps.length > 0) { %>
+          <% rfps.forEach(function(rfp) { %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <a href="/rfps/<%= rfp.id %>" class="text-emerald-600 hover:underline font-medium"><%= rfp.title %></a>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600"><%= rfp.buyer_name %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded-full 
+                <%= rfp.status === 'open' ? 'bg-green-100 text-green-800' : '' %>
+                <%= rfp.status === 'draft' ? 'bg-gray-100 text-gray-800' : '' %>
+                <%= rfp.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : '' %>
+                <%= rfp.status === 'awarded' ? 'bg-blue-100 text-blue-800' : '' %>
+                <%= rfp.status === 'cancelled' ? 'bg-red-100 text-red-800' : '' %>
+              "><%= rfp.status %></span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600"><%= new Date(rfp.deadline).toLocaleDateString() %></td>
+            <td class="px-4 py-3 text-sm text-gray-600"><%= rfp.bid_count || 0 %></td>
+            <td class="px-4 py-3">
+              <% if (rfp.is_green_rfp) { %>
+              <span class="text-emerald-600 text-sm">&#x2714; Green</span>
+              <% } %>
+            </td>
+            <td class="px-4 py-3">
+              <a href="/rfps/<%= rfp.id %>" class="text-sm text-emerald-600 hover:underline">View</a>
+              <% if (user && user.role === 'vendor' && rfp.status === 'open') { %>
+                <a href="/rfps/<%= rfp.id %>/bids/create" class="ml-2 text-sm bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700">Bid</a>
+              <% } %>
+              <% if (user && user.role === 'buyer' && rfp.status === 'draft') { %>
+                <a href="/rfps/<%= rfp.id %>/edit" class="ml-2 text-sm text-blue-600 hover:underline">Edit</a>
+              <% } %>
+            </td>
+          </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="px-4 py-8 text-center text-gray-500">No RFPs found</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (typeof pagination !== 'undefined' && pagination.totalPages > 1) { %>
+  <div class="flex justify-center mt-6 gap-2">
+    <% if (pagination.page > 1) { %>
+    <a href="?page=<%= pagination.page - 1 %>" class="px-3 py-1 bg-white border rounded hover:bg-gray-50">Previous</a>
+    <% } %>
+    <span class="px-3 py-1 text-gray-600">Page <%= pagination.page %> of <%= pagination.totalPages %></span>
+    <% if (pagination.page < pagination.totalPages) { %>
+    <a href="?page=<%= pagination.page + 1 %>" class="px-3 py-1 bg-white border rounded hover:bg-gray-50">Next</a>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+
+<% if (typeof scripts === 'undefined') { scripts = ''; } %>

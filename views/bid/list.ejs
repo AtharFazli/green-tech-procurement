@@ -1,0 +1,46 @@
+<div class="max-w-4xl mx-auto">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">My Bids</h1>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">RFP</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Total Amount</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Submitted</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% if (typeof bids !== 'undefined' && bids.length > 0) { %>
+          <% bids.forEach(function(b) { %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <a href="/rfps/<%= b.rfp_id %>" class="text-emerald-600 hover:underline font-medium"><%= b.rfp_title %></a>
+            </td>
+            <td class="px-4 py-3 text-sm font-medium"><%= b.currency || 'USD' %> <%= parseFloat(b.total_amount).toLocaleString() %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded-full 
+                <%= b.status === 'submitted' ? 'bg-gray-100 text-gray-800' : '' %>
+                <%= b.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : '' %>
+                <%= b.status === 'accepted' ? 'bg-green-100 text-green-800' : '' %>
+                <%= b.status === 'rejected' ? 'bg-red-100 text-red-800' : '' %>
+                <%= b.is_winner ? 'bg-blue-100 text-blue-800' : '' %>
+              "><%= b.status %><%= b.is_winner ? ' (Winner)' : '' %></span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600"><%= new Date(b.submitted_at).toLocaleDateString() %></td>
+            <td class="px-4 py-3">
+              <a href="/bids/<%= b.id %>" class="text-sm text-emerald-600 hover:underline">View</a>
+            </td>
+          </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-gray-500">You haven't submitted any bids yet</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

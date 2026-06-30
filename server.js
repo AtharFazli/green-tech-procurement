@@ -107,6 +107,32 @@ server.get('/products/:id/edit', auth, (req, res) => {
   res.render('product/form', { user: req.user, product: {}, categories: [], page: 'product-form' });
 });
 
+// RFP pages
+server.get('/rfps', (req, res) => {
+  res.render('rfp/list', { user: req.pageUser || null, title: 'RFPs', page: 'rfp-list' });
+});
+
+server.get('/rfps/create', auth, (req, res) => {
+  res.render('rfp/create', { user: req.user, title: 'Create RFP', page: 'rfp-create' });
+});
+
+server.get('/rfps/:id', (req, res) => {
+  res.render('rfp/detail', { user: req.pageUser || null, title: 'RFP Detail', page: 'rfp-detail' });
+});
+
+// Bid pages
+server.get('/bids', auth, (req, res) => {
+  res.render('bid/list', { user: req.user, title: 'My Bids', page: 'bid-list' });
+});
+
+server.get('/rfps/:rfpId/bids/create', auth, (req, res) => {
+  res.render('bid/create', { user: req.user, title: 'Submit Bid', page: 'bid-create' });
+});
+
+server.get('/bids/:id', auth, (req, res) => {
+  res.render('bid/detail', { user: req.user, title: 'Bid Detail', page: 'bid-detail' });
+});
+
 // API routes
 server.use('/api/v1', require('./routes'));
 

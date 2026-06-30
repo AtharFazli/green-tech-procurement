@@ -1,0 +1,161 @@
+<div class="max-w-4xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Submit Bid</h1>
+    <a href="/rfps/<%= rfp.id %>" class="text-sm text-emerald-600 hover:underline">Back to RFP</a>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-lg font-semibold text-gray-800"><%= rfp.title %></h2>
+    <p class="text-gray-500 text-sm">Deadline: <%= new Date(rfp.deadline).toLocaleString() %></p>
+    <% if (rfp.description) { %>
+    <p class="text-gray-700 text-sm mt-2"><%= rfp.description %></p>
+    <% } %>
+  </div>
+
+  <form id="bidForm" class="space-y-6">
+    <!-- RFP Line Items (read-only reference) -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Pricing by Line Item</h3>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Item</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Qty</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Unit</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Unit Price</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Total</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Notes</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200" id="lineItemsBody">
+          <% if (typeof lineItems !== 'undefined' && lineItems.length > 0) { %>
+            <% lineItems.forEach(function(item, idx) { %>
+            <tr>
+              <td class="px-4 py-2 text-sm">
+                <%= item.item_name %>
+                <input type="hidden" name="line_items[<%= idx %>][rfp_line_item_id]" value="<%= item.id %>">
+              </td>
+              <td class="px-4 py-2 text-sm"><%= item.quantity %></td>
+              <td class="px-4 py-2 text-sm"><%= item.unit %></td>
+              <td>
+                <input type="number" step="0.01" min="0" name="line_items[<%= idx %>][unit_price]" required
+                  class="w-28 border rounded px-2 py-1 text-sm unit-price"
+                  data-qty="<%= item.quantity %>"
+                  onchange="updateLineTotal(this)">
+              </td>
+              <td class="px-4 py-2 text-sm">
+                <span class="line-total">0.00</span>
+                <input type="hidden" name="line_items[<%= idx %>][quantity]" value="<%= item.quantity %>">
+              </td>
+              <td>
+                <input type="text" name="line_items[<%= idx %>][notes]" class="w-28 border rounded px-2 py-1 text-sm">
+              </td>
+            </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">No line items</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bid Details -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Bid Details</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Total Amount *</label>
+          <input type="number" step="0.01" min="0.01" name="total_amount" id="totalAmount" required class="w-full border rounded px-3 py-2 mt-1">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Currency</label>
+          <select name="currency" class="w-full border rounded px-3 py-2 mt-1">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Delivery Timeline (days)</label>
+          <input type="number" min="1" name="delivery_timeline_days" class="w-full border rounded px-3 py-2 mt-1">
+        </div>
+        <div class="flex items-center mt-6">
+          <input type="checkbox" name="carbon_offset_included" value="true" class="mr-2">
+          <label class="text-sm font-medium text-gray-700">Carbon Offset Included</label>
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium text-gray-700">Sustainability Notes</label>
+        <textarea name="sustainability_notes" rows="3" class="w-full border rounded px-3 py-2 mt-1"></textarea>
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm font-medium text-gray-700">Additional Notes</label>
+        <textarea name="notes" rows="2" class="w-full border rounded px-3 py-2 mt-1"></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-4">
+      <a href="/rfps/<%= rfp.id %>" class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50">Cancel</a>
+      <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700">Submit Bid</button>
+    </div>
+  </form>
+</div>
+
+<% var scripts = `
+<script>
+function updateLineTotal(input) {
+  const price = parseFloat(input.value) || 0;
+  const qty = parseFloat(input.dataset.qty) || 0;
+  const total = price * qty;
+  const row = input.closest('tr');
+  row.querySelector('.line-total').textContent = total.toFixed(2);
+
+  // Auto-sum all line totals into total_amount
+  let grandTotal = 0;
+  document.querySelectorAll('.line-total').forEach(function(el) {
+    grandTotal += parseFloat(el.textContent) || 0;
+  });
+  document.getElementById('totalAmount').value = grandTotal.toFixed(2);
+}
+
+document.getElementById('bidForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const lineItems = [];
+  document.querySelectorAll('#lineItemsBody tr').forEach(function(row, idx) {
+    const rfpLineItemId = row.querySelector('input[name$="[rfp_line_item_id]"]')?.value;
+    const unitPrice = parseFloat(row.querySelector('.unit-price')?.value) || 0;
+    const qty = parseFloat(row.querySelector('input[name$="[quantity]"]')?.value) || 0;
+    const notes = row.querySelector('input[name$="[notes]"]')?.value || '';
+    if (rfpLineItemId) {
+      lineItems.push({ rfp_line_item_id: rfpLineItemId, unit_price: unitPrice, quantity: qty, notes: notes });
+    }
+  });
+
+  const payload = {
+    total_amount: parseFloat(formData.get('total_amount')),
+    currency: formData.get('currency'),
+    delivery_timeline_days: formData.get('delivery_timeline_days') ? parseInt(formData.get('delivery_timeline_days')) : null,
+    sustainability_notes: formData.get('sustainability_notes'),
+    carbon_offset_included: formData.get('carbon_offset_included') === 'true',
+    notes: formData.get('notes'),
+    line_items: lineItems
+  };
+
+  try {
+    const res = await fetch('/api/v1/bids/rfps/<%= rfp.id %>/bids', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = '/bids/' + data.data.id;
+    } else {
+      alert('Error: ' + (data.message || 'Submission failed'));
+    }
+  } catch (err) {
+    alert('Network error');
+  }
+});
+<\/script>`; %>

@@ -5,8 +5,8 @@ router.use('/users', require('./userRoutes'));
 router.use('/vendors', require('./vendorRoutes'));
 router.use('/products', require('./productRoutes'));
 router.use('/categories', require('./categoryRoutes'));
-// Future: router.use('/rfps', require('./rfpRoutes'));
-// Future: router.use('/bids', require('./bidRoutes'));
-// Future: router.use('/dashboard', require('./dashboardRoutes'));
+router.use('/rfps', require('./rfpRoutes'));
+router.use('/bids', require('./bidRoutes'));
+router.use('/activities', require('./activityRoutes'));
 
 module.exports = router;

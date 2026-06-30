@@ -1,0 +1,190 @@
+<div class="max-w-4xl mx-auto">
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800"><%= rfp.title %></h1>
+        <p class="text-gray-500 text-sm">by <%= rfp.buyer_name %> &middot; <%= rfp.buyer_email %></p>
+      </div>
+      <span class="px-3 py-1 text-sm rounded-full 
+        <%= rfp.status === 'open' ? 'bg-green-100 text-green-800' : '' %>
+        <%= rfp.status === 'draft' ? 'bg-gray-100 text-gray-800' : '' %>
+        <%= rfp.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : '' %>
+        <%= rfp.status === 'awarded' ? 'bg-blue-100 text-blue-800' : '' %>
+        <%= rfp.status === 'cancelled' ? 'bg-red-100 text-red-800' : '' %>
+      "><%= rfp.status %></span>
+    </div>
+
+    <% if (rfp.description) { %>
+    <p class="text-gray-700 mb-4"><%= rfp.description %></p>
+    <% } %>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+      <div>
+        <span class="text-gray-500">Deadline</span>
+        <p class="font-medium"><%= new Date(rfp.deadline).toLocaleString() %></p>
+      </div>
+      <% if (rfp.budget_min) { %>
+      <div>
+        <span class="text-gray-500">Budget Min</span>
+        <p class="font-medium"><%= rfp.currency %> <%= parseFloat(rfp.budget_min).toLocaleString() %></p>
+      </div>
+      <% } %>
+      <% if (rfp.budget_max) { %>
+      <div>
+        <span class="text-gray-500">Budget Max</span>
+        <p class="font-medium"><%= rfp.currency %> <%= parseFloat(rfp.budget_max).toLocaleString() %></p>
+      </div>
+      <% } %>
+      <div>
+        <span class="text-gray-500">Green RFP</span>
+        <p class="font-medium"><%= rfp.is_green_rfp ? 'Yes' : 'No' %></p>
+      </div>
+    </div>
+
+    <% if (rfp.sustainability_requirements) { %>
+    <div class="mb-4">
+      <h3 class="text-sm font-medium text-gray-700">Sustainability Requirements</h3>
+      <p class="text-gray-600 text-sm"><%= rfp.sustainability_requirements %></p>
+    </div>
+    <% } %>
+
+    <!-- Buyer status actions -->
+    <% if (user && user.role === 'buyer' && rfp.buyer_id === user.id) { %>
+    <div class="flex gap-2 mt-4 pt-4 border-t">
+      <% if (rfp.status === 'draft') { %>
+      <button onclick="publishRFP('<%= rfp.id %>')" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700">Publish</button>
+      <button onclick="cancelRFP('<%= rfp.id %>')" class="bg-red-100 text-red-700 px-4 py-2 rounded text-sm hover:bg-red-200">Cancel</button>
+      <% } %>
+      <% if (rfp.status === 'under_review') { %>
+      <div class="flex items-center gap-2">
+        <select id="awardBidSelect" class="border rounded px-3 py-2 text-sm">
+          <option value="">Select winning bid...</option>
+          <% if (typeof bids !== 'undefined' && bids) { bids.forEach(function(b) { %>
+          <option value="<%= b.id %>"><%= b.vendor_name %> - <%= b.currency %> <%= parseFloat(b.total_amount).toLocaleString() %></option>
+          <% }); } %>
+        </select>
+        <button onclick="awardRFP('<%= rfp.id %>')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Award</button>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+
+    <!-- Vendor submit bid -->
+    <% if (user && user.role === 'vendor' && rfp.status === 'open') { %>
+    <div class="mt-4 pt-4 border-t">
+      <a href="/rfps/<%= rfp.id %>/bids/create" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700">Submit Bid</a>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Line Items -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Line Items</h2>
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">#</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Item</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Description</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Qty</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Unit</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Est. Price</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% if (typeof lineItems !== 'undefined' && lineItems.length > 0) { %>
+          <% lineItems.forEach(function(item, idx) { %>
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= idx + 1 %></td>
+            <td class="px-4 py-2 text-sm font-medium"><%= item.item_name %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= item.description || '' %></td>
+            <td class="px-4 py-2 text-sm"><%= item.quantity %></td>
+            <td class="px-4 py-2 text-sm"><%= item.unit %></td>
+            <td class="px-4 py-2 text-sm"><%= item.estimated_price ? rfp.currency + ' ' + parseFloat(item.estimated_price).toLocaleString() : '-' %></td>
+          </tr>
+          <% }); %>
+        <% } else { %>
+          <tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">No line items</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Bids -->
+  <% if (typeof bids !== 'undefined' && bids && bids.length > 0) { %>
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Bids (<%= bids.length %>)</h2>
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Vendor</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Amount</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Submitted</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% bids.forEach(function(b) { %>
+        <tr class="<%= b.is_winner ? 'bg-green-50' : '' %>">
+          <td class="px-4 py-2 text-sm"><%= b.vendor_name %></td>
+          <td class="px-4 py-2 text-sm font-medium"><%= rfp.currency %> <%= parseFloat(b.total_amount).toLocaleString() %></td>
+          <td class="px-4 py-2">
+            <span class="px-2 py-1 text-xs rounded-full 
+              <%= b.status === 'submitted' ? 'bg-gray-100 text-gray-800' : '' %>
+              <%= b.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : '' %>
+              <%= b.status === 'accepted' ? 'bg-green-100 text-green-800' : '' %>
+              <%= b.status === 'rejected' ? 'bg-red-100 text-red-800' : '' %>
+            "><%= b.status %><%= b.is_winner ? ' (Winner)' : '' %></span>
+          </td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= new Date(b.submitted_at).toLocaleDateString() %></td>
+          <td class="px-4 py-2">
+            <a href="/bids/<%= b.id %>" class="text-sm text-emerald-600 hover:underline">View</a>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<% var scripts = `
+<script>
+async function publishRFP(id) {
+  if (!confirm('Publish this RFP? It will be visible to vendors.')) return;
+  try {
+    const res = await fetch('/api/v1/rfps/' + id + '/publish', { method: 'PATCH' });
+    const data = await res.json();
+    if (data.success) location.reload();
+    else alert('Error: ' + data.message);
+  } catch(e) { alert('Network error'); }
+}
+
+async function cancelRFP(id) {
+  if (!confirm('Cancel this RFP?')) return;
+  try {
+    const res = await fetch('/api/v1/rfps/' + id + '/cancel', { method: 'PATCH' });
+    const data = await res.json();
+    if (data.success) location.reload();
+    else alert('Error: ' + data.message);
+  } catch(e) { alert('Network error'); }
+}
+
+async function awardRFP(rfpId) {
+  const select = document.getElementById('awardBidSelect');
+  const bidId = select.value;
+  if (!bidId) { alert('Select a bid to award'); return; }
+  if (!confirm('Award this RFP to the selected vendor?')) return;
+  try {
+    const res = await fetch('/api/v1/rfps/' + rfpId + '/award', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bid_id: bidId })
+    });
+    const data = await res.json();
+    if (data.success) location.reload();
+    else alert('Error: ' + data.message);
+  } catch(e) { alert('Network error'); }
+}
+<\/script>`; %>

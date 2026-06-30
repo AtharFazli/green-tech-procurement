@@ -1,0 +1,112 @@
+<div class="max-w-4xl mx-auto">
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">Bid Details</h1>
+        <p class="text-gray-500 text-sm">
+          <a href="/rfps/<%= bid.rfp_id %>" class="text-emerald-600 hover:underline"><%= bid.rfp_title %></a>
+          &middot; by <strong><%= bid.vendor_name %></strong>
+        </p>
+      </div>
+      <span class="px-3 py-1 text-sm rounded-full 
+        <%= bid.status === 'submitted' ? 'bg-gray-100 text-gray-800' : '' %>
+        <%= bid.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : '' %>
+        <%= bid.status === 'accepted' ? 'bg-green-100 text-green-800' : '' %>
+        <%= bid.status === 'rejected' ? 'bg-red-100 text-red-800' : '' %>
+        <%= bid.is_winner ? 'bg-blue-100 text-blue-800' : '' %>
+      "><%= bid.status %><%= bid.is_winner ? ' (Winner)' : '' %></span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+      <div>
+        <span class="text-gray-500">Total Amount</span>
+        <p class="font-medium text-lg"><%= bid.currency %> <%= parseFloat(bid.total_amount).toLocaleString() %></p>
+      </div>
+      <div>
+        <span class="text-gray-500">Delivery Timeline</span>
+        <p class="font-medium"><%= bid.delivery_timeline_days ? bid.delivery_timeline_days + ' days' : 'Not specified' %></p>
+      </div>
+      <div>
+        <span class="text-gray-500">Carbon Offset</span>
+        <p class="font-medium"><%= bid.carbon_offset_included ? 'Yes' : 'No' %></p>
+      </div>
+      <div>
+        <span class="text-gray-500">Submitted</span>
+        <p class="font-medium"><%= new Date(bid.submitted_at).toLocaleString() %></p>
+      </div>
+    </div>
+
+    <% if (bid.sustainability_notes) { %>
+    <div class="mb-4">
+      <h3 class="text-sm font-medium text-gray-700">Sustainability Notes</h3>
+      <p class="text-gray-600 text-sm"><%= bid.sustainability_notes %></p>
+    </div>
+    <% } %>
+
+    <% if (bid.notes) { %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-700">Additional Notes</h3>
+      <p class="text-gray-600 text-sm"><%= bid.notes %></p>
+    </div>
+    <% } %>
+
+    <!-- Buyer actions -->
+    <% if (user && user.role === 'buyer' && bid.buyer_id === user.id) { %>
+    <div class="mt-4 pt-4 border-t flex gap-2">
+      <button onclick="updateStatus('<%= bid.id %>', 'under_review')" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">Under Review</button>
+      <button onclick="updateStatus('<%= bid.id %>', 'accepted')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Accept</button>
+      <button onclick="updateStatus('<%= bid.id %>', 'rejected')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Reject</button>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Line Items -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Pricing Details</h2>
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Item</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Unit Price</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Qty</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Total</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Green Score</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Notes</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% if (typeof lineItems !== 'undefined' && lineItems.length > 0) { %>
+          <% lineItems.forEach(function(item) { %>
+          <tr>
+            <td class="px-4 py-2 text-sm"><%= item.item_name %></td>
+            <td class="px-4 py-2 text-sm"><%= bid.currency %> <%= parseFloat(item.unit_price).toFixed(2) %></td>
+            <td class="px-4 py-2 text-sm"><%= item.quantity %></td>
+            <td class="px-4 py-2 text-sm font-medium"><%= bid.currency %> <%= parseFloat(item.total_price).toFixed(2) %></td>
+            <td class="px-4 py-2 text-sm"><%= item.green_score !== null ? item.green_score : '-' %></td>
+            <td class="px-4 py-2 text-sm text-gray-500"><%= item.notes || '' %></td>
+          </tr>
+          <% }); %>
+        <% } else { %>
+          <tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">No line items</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% var scripts = `
+<script>
+async function updateStatus(bidId, status) {
+  if (!confirm('Change bid status to ' + status + '?')) return;
+  try {
+    const res = await fetch('/api/v1/bids/' + bidId + '/status', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: status })
+    });
+    const data = await res.json();
+    if (data.success) location.reload();
+    else alert('Error: ' + data.message);
+  } catch(e) { alert('Network error'); }
+}
+<\/script>`; %>
